@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2018, The Linux Foundation. All rights reserved.
  * Copyright (C) 2018 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,6 @@ struct mutex gamma_lock;
 struct mutex ce_lock;
 struct mutex eye_lock;
 struct mutex cabc_lock;
-
 
 #define CMDLINE_DSI_CTL_NUM_STRING_LEN 2
 
@@ -358,6 +357,7 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 			pr_err("%s: Panel reset failed. rc=%d\n",
 					__func__, ret);
 	}
+
 	return ret;
 }
 
@@ -758,7 +758,7 @@ static ssize_t mdss_dsi_cmd_state_read(struct file *file, char __user *buf,
 	if (blen < 0)
 		return 0;
 
-	if (copy_to_user(buf, buffer, blen))
+	if (copy_to_user(buf, buffer, min(count, (size_t)blen+1)))
 		return -EFAULT;
 
 	*ppos += blen;
@@ -1523,7 +1523,7 @@ int mdss_dsi_on(struct mdss_panel_data *pdata)
 		mdss_dsi_clk_ctrl(ctrl_pdata, ctrl_pdata->dsi_clk_handle,
 				  MDSS_DSI_ALL_CLKS, MDSS_DSI_CLK_OFF);
 
-	pr_info("%s: mdss_dsi_on time=%ums \n", __func__,
+		pr_info("%s: mdss_dsi_on time=%ums \n", __func__,
 		jiffies_to_msecs(jiffies-timeout));
 
 end:
@@ -2905,10 +2905,10 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 				panel_name[i] = *(str1 + i);
 			panel_name[i] = 0;
 		}
-
+		
 		if (!strcmp(panel_name, "qcom,mdss_dsi_ili9881c_tianma_c3b_720p_video"))
 			is_tianma_panel = true;
-
+		
 		pr_info("%s: cmdline:%s panel_name:%s\n",
 			__func__, panel_cfg, panel_name);
 		if (!strcmp(panel_name, NONE_PANEL))
@@ -2947,13 +2947,14 @@ static struct device_node *mdss_dsi_find_panel_of_node(
 					cfg_np_name, MDSS_MAX_PANEL_LEN);
 			}
 		}
+
 		is_Lcm_Present = true;
 		return dsi_pan_node;
 	}
 end:
 	if (strcmp(panel_name, NONE_PANEL))
 		dsi_pan_node = mdss_dsi_pref_prim_panel(pdev);
-		 is_Lcm_Present = false;
+		is_Lcm_Present = false;
 exit:
 	return dsi_pan_node;
 }
